@@ -1,7 +1,9 @@
 package kopsa
 
 import (
+    "fmt"
     "os"
+    "path/filepath"
     "io"
 )
 
@@ -28,6 +30,20 @@ func appendFiles(dst string, srcs []string) (int64, error) {
     defer destination.Close()
 
     for _, src := range srcs {
+        src, err = filepath.Abs(src)
+        if err != nil {
+            return totalBytes, err
+        }
+
+        sfi, err := os.Stat(src)
+        if err != nil {
+            return totalBytes, err
+        }
+
+        if !(sfi.Mode().IsRegular()) {
+            return totalBytes, fmt.Errorf("non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
+        }
+
         f, err := os.Open(src)
         if err != nil {
             return totalBytes, err
@@ -98,13 +114,23 @@ func Copy(dst string, srcs ...string) (int64, error) {
 
     defer source.Close()
 
+    dst, err = filepath.Abs(dst)
+    if err != nil {
+        return totalBytes, err
+    }
+
     if len(srcs) > 1 {
         totalBytes, err = appendFiles(dst, srcs)
         if err != nil {
             return totalBytes, err
         }
     } else {
-        source, err = os.Open(srcs[0])
+        src, err := filepath.Abs(srcs[0])
+        if err != nil {
+            return totalBytes, err
+        }
+
+        source, err = os.Open(src)
         if err != nil {
             return totalBytes, err
         }
