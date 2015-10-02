@@ -22,7 +22,7 @@ func appendFiles(dst string, srcs []string) (int64, error) {
         destination *os.File
     )
 
-    destination, err = os.Create(dst)//OpenFile(dst, os.O_CREATE|os.O_TRUNC|os.O_WRONLY|os.O_APPEND, 0660)
+    destination, err = os.Create(dst)
     if err != nil {
         return totalBytes, err
     }
@@ -99,22 +99,12 @@ func Copy(dst string, srcs ...string) (int64, error) {
 
     defer source.Close()
 
-    /*dst, err = filepath.Abs(dst)
-    if err != nil {
-        return totalBytes, err
-    }*/
-
     if len(srcs) > 1 {
         totalBytes, err = appendFiles(dst, srcs)
         if err != nil {
             return totalBytes, err
         }
     } else {
-        /*src, err := filepath.Abs(srcs[0])
-        if err != nil {
-            return totalBytes, err
-        }*/
-
         source, err = os.Open(srcs[0])
         if err != nil {
             return totalBytes, err
