@@ -14,33 +14,6 @@ var (
     err     error
 )
 
-func TestSingleSourceFileWriterCopy(t *testing.T) {
-    stat, err := os.Stat(this)
-    if err != nil {
-        t.Errorf("os.Stat failed: %s", err.Error())
-        return
-    }
-
-    destOpen, err := os.Create(dest)
-    if err != nil {
-        t.Errorf("os.Open failed: %s", err.Error())
-        return
-    }
-    defer destOpen.Close()
-
-    n, err := Copy(destOpen, this)
-    defer os.Remove(dest)
-    if err != nil {
-        t.Errorf("Copy failed: %s", err.Error())
-        return
-    }
-
-    if n != stat.Size() {
-        t.Errorf("Copy failed: unmatching file sizes")
-        return
-    }
-}
-
 func TestSingleSourceFileStringCopy(t *testing.T) {
     stat, err := os.Stat(this)
     if err != nil {
