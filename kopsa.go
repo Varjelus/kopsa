@@ -1,6 +1,7 @@
 package kopsa
 
 import (
+    "fmt"
     "os"
     "io"
 )
@@ -11,22 +12,27 @@ var bufferSize = 10 * mega
 func copyReaderWriter(dst io.Writer, src io.Reader) (int64, error) {
     buffer := make([]byte, bufferSize)
     return io.CopyBuffer(dst, src, buffer)
-    //return io.Copy(dst, src)
 }
 
 // If err == nil, file returned is OPEN
-func appendFiles(dst string, srcs []string) (int64, error) {
+func appendFiles(dst interface{}, srcs []string) (int64, error) {
     var (
         totalBytes  int64
         err         error
         destination *os.File
     )
 
-    destination, err = os.Create(dst)
-    if err != nil {
-        return totalBytes, err
+    switch dst.(type) {
+    default:
+        return totalBytes, fmt.Errorf("copy destination argument is invalid")
+    case string:
+        destination, err = os.Create(dst.(string))
+        if err != nil {
+            return totalBytes, err
+        }
+        defer destination.Close()
+    case io.Writer:
     }
-    defer destination.Close()
 
     for _, src := range srcs {
         f, err := os.Open(src)
@@ -90,7 +96,7 @@ func SetBufferSize(size int) {
     bufferSize = size
 }
 
-func Copy(dst string, srcs ...string) (int64, error) {
+func Copy(dst interface{}, srcs ...string) (int64, error) {
     var (
         err         error
         totalBytes  int64
@@ -109,11 +115,23 @@ func Copy(dst string, srcs ...string) (int64, error) {
         if err != nil {
             return totalBytes, err
         }
+        defer source.Close()
 
-        n, err := copyFile(dst, source)
-        totalBytes = totalBytes + n
-        if err != nil {
-            return totalBytes, err
+        switch dst.(type) {
+        default:
+            return totalBytes, fmt.Errorf("copy destination argument is invalid")
+        case string:
+            n, err := copyFile(dst.(string), source)
+            totalBytes = totalBytes + n
+            if err != nil {
+                return totalBytes, err
+            }
+        case io.Writer:
+            n, err := copyReaderWriter(dst.(io.Writer), source)
+            totalBytes = totalBytes + n
+            if err != nil {
+                return totalBytes, err
+            }
         }
 
         err = source.Close()
