@@ -25,6 +25,7 @@ func Copy(dst string, srcs ...string) (int64, error) {
         err          error
         totalBytes   int64
         medium       *os.File
+        buffer       []byte     = make([]byte, bufferSize)
     )
 
     // Get the absolute path of the destination file
@@ -69,9 +70,6 @@ func Copy(dst string, srcs ...string) (int64, error) {
         if err != nil {
             return totalBytes, err
         }
-
-        // Create a buffer of bufferSize
-        buffer := make([]byte, bufferSize)
 
         // Read the source file through the buffer 
         // to the intermediary file.
